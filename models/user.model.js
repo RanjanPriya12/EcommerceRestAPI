@@ -43,11 +43,27 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+//incrept password
 userSchema.pre("save", function (next) {
   const hash = bcrypt.hashSync(this.password, 10);
   this.password = hash;
   next();
 });
+
+// Compare password
+userSchema.methods.comparePassword = async function (password) {
+  console.log("helo")
+  try {
+    return await bcrypt.compareSync(password, this.password);
+  } catch (error) {
+    console.log("error",error)
+  }
+};
+
+// forget password
+userSchema.methods.forgetPassword = function () {
+  return true;
+};
 
 const User = new mongoose.model("user", userSchema);
 module.exports = User;
