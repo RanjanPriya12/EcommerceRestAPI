@@ -1,50 +1,53 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 
-const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema(
+  {
     first_name: {
+      type: String,
+      required: true,
+    },
+    last_name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    role: {
+      type: String,
+      default: "customer",
+    },
+    avatar: {
+      public_id: {
         type: String,
-        required: [true, "Please Enter Your First Name"],
-        maxLength: [15, "first name cannot exceed 15 characters"],
-        minLength: [3, "first name is too small"],
+        required: false,
       },
-      last_name: {
+      url: {
         type: String,
-        required: [true, "Please Enter Your First Name"],
-        maxLength: [15, "last name cannot exceed 15 characters"],
-        minLength: [5, "last name is too small"],
+        required: false,
       },
-      email: {
-        type: String,
-        required: [true, "Please Enter Your Email"],
-        unique: true,
-        validate: [validator.isEmail, "Sorry Email is Not Valid"],
-      },
-      password: {
-        type: String,
-        required: [true, "Please Enter Your Password"],
-        minLength: [8, "Password should be greater than 8 characters"],
-        select: false,
-      },
-      role: {
-        type: String,
-        default: "student",
-      },
-      avatar: {
-        public_id: {
-          type: String,
-          required: true,
-        },
-        url: {
-          type: String,
-          required: true,
-        },
-      },
-      resetPasswordToken: String,
-      resetPasswordExpire: Date,
-},{
-    versionKey:false,
-    timestamps:false
+    },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
+  },
+  {
+    versionKey: false,
+    timestamps: false,
+  }
+);
+
+userSchema.pre("save", function (next) {
+  const hash = bcrypt.hashSync(this.password, 10);
+  this.password = hash;
+  next();
 });
 
-const User = new mongoose.model('user',userSchema);
-module.exports= User;
+const User = new mongoose.model("user", userSchema);
+module.exports = User;
