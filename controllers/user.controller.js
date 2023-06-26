@@ -1,5 +1,6 @@
 const User = require("../models/user.model");
 const jwt = require("jsonwebtoken");
+const cloudinary = require("cloudinary");
 require("dotenv").config();
 
 // generate token
@@ -9,11 +10,29 @@ const generateToken = (user) => {
 
 exports.register = async (req, res) => {
   try {
+    const { first_name, last_ame, email, password } = req.body;
     let user = await User.findOne({ email: req.body.emil }).lean().exec();
     if (user) {
-      return res.status(400).send("User already exists");
+      return res
+        .status(400)
+        .send({ Success: false, message: "User already exists" });
     } else {
-      user = await User.create(req.body);
+      const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
+        folder: "Avtaar",
+        width: 150,
+        crop: "scale",
+      });
+
+      user = await User.create({
+        first_name,
+        last_ame,
+        email,
+        password,
+        avatar: {
+          public_id: myCloud.public_id,
+          url: myCloud.secure_url,
+        },
+      });
       const token = generateToken(user);
       const options = {
         expires: new Date(
@@ -67,4 +86,3 @@ exports.login = async (req, res) => {
     }
   }
 };
-
