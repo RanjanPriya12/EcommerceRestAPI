@@ -15,14 +15,14 @@ require("dotenv").config();
 const port = 5000 || process.env.PORT;
 
 app.get("/",(req,res)=>{
-    return res.send(`<h2>Welcome to our Blog-Writing App</h2>`);
+    return res.send(`<h2>Welcome to myStore online shopping site</h2>`);
 });
 
 app.use("/api/myStore",userRoute);
 cloudinary.config({ 
-    cloud_name: 'dwaguis04', 
-    api_key: '827958215438413', 
-    api_secret: 'PyhGGlW8h2-jREsWQxHDA9Qrhb0' 
+    cloud_name: process.env.UPLOAD_CLOUD_NAME, 
+    api_key: process.env.UPLOAD_API_KEY, 
+    api_secret: process.env.UPLOAD_API_SECRET 
   });
 
 app.listen(port,async(res,req)=>{

@@ -1,5 +1,7 @@
 const User = require("../models/user.model");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+const randomstring = require("randomstring");
 const cloudinary = require("cloudinary");
 require("dotenv").config();
 
@@ -7,6 +9,40 @@ require("dotenv").config();
 const generateToken = (user) => {
   return jwt.sign({ user }, process.env.SECRET_KEY);
 };
+
+// mail for forget password
+const sendResetPasswordMail = async(email,url)=>{
+  try {
+    const tansporter = nodemailer.createTransport({
+      host:"",
+      port:"",
+      secure:false,
+      requireTLS:true,
+      service: process.env.SMPT_SERVICE,
+      auth:{
+        user:process.env.SMT_USER,
+        pass:process.env.SMT_PASSWORD
+      }
+    });
+
+    const message = `Your password reset link is ${url}, click this link to reset your password. If you not requested this email then please ignore it`;
+    const mailOptions = {
+      from:process.env.SMT_USER,
+      to:email,
+      subject:`E-commerce Password Recovery Link`,
+      text:message
+    }
+    tansporter.sendMail(mailOptions,(error,info)=>{
+      if(error){
+        console.log("error",error);
+      }else{
+        console.log("Mail has been sent", info.response);
+      }
+    })
+  } catch (error) {
+    return res.status(400).send({Success:false,error:error.message});
+  }
+}
 
 exports.register = async (req, res) => {
   try {
@@ -17,21 +53,21 @@ exports.register = async (req, res) => {
         .status(400)
         .send({ Success: false, message: "User already exists" });
     } else {
-      const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
-        folder: "Avtaar",
-        width: 150,
-        crop: "scale",
-      });
+      // const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
+      //   folder: "Avtaar",
+      //   width: 150,
+      //   crop: "scale",
+      // });
 
       user = await User.create({
         first_name,
         last_ame,
         email,
         password,
-        avatar: {
-          public_id: myCloud.public_id,
-          url: myCloud.secure_url,
-        },
+        // avatar: {
+        //   public_id: myCloud.public_id,
+        //   url: myCloud.secure_url,
+        // },
       });
       const token = generateToken(user);
       const options = {
@@ -86,3 +122,22 @@ exports.login = async (req, res) => {
     }
   }
 };
+
+exports.forgetPassword = async(req,res)=>{
+  try {
+    const email = req.body.email;
+    const user = await User.findOne({email});
+    if(user){
+        const resetToken = randomstring.generate();
+        const resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+        await User.updateOne({email:email},{$set:{resetPasswordToken:resetToken,resetPasswordExpire:resetPasswordExpire}});
+        const resetPasswordUrl = `${req.protocol}://${req.get("host")}/password/reset/${resetToken}`;
+        sendResetPasswordMail(email,resetPasswordUrl);
+        return res.status(200).send({Success:true,message:"Please check your mail, reset password link is send to your mail."});
+    }else{
+      return res.status(200).send({Success:true, message:"This email does not exists."});
+    }
+  } catch (error) {
+    return res.status(400).send({Success:flase, error:error.message});
+  }
+}
