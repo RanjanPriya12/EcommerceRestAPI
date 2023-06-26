@@ -125,6 +125,18 @@ exports.login = async (req, res) => {
   }
 };
 
+exports.logout = async (req, res) => {
+  try {
+    res.cookie("Token", null, {
+      expires: new Date(Date.now()),
+      httpOnly: true,
+    });
+    return res.status(200).json({Success: true,message: "Logout successfully."});
+  } catch (error) {
+    return res.status(500).json({Success: false,error: error.message});
+  }
+};
+
 exports.forgetPassword = async(req,res)=>{
   try {
     const email = req.body.email;
