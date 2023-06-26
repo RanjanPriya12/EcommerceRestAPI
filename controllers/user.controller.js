@@ -11,7 +11,7 @@ const generateToken = (user) => {
 };
 
 // mail for forget password
-const sendResetPasswordMail = async(email,url)=>{
+const sendResetPasswordMail = async(email,user,url)=>{
   try {
     const tansporter = nodemailer.createTransport({
       host:"",
@@ -40,7 +40,9 @@ const sendResetPasswordMail = async(email,url)=>{
       }
     })
   } catch (error) {
-    return res.status(400).send({Success:false,error:error.message});
+    user.resetPasswordToken=undefined;
+    user.resetPasswordExpire=undefined;
+    return res.status(500).send({Success:false,error:error.message});
   }
 }
 
@@ -85,7 +87,7 @@ exports.register = async (req, res) => {
       });
     }
   } catch (error) {
-    return res.status(400).send({ errors: error.message });
+    return res.status(500).send({ errors: error.message });
   }
 };
 
@@ -123,6 +125,18 @@ exports.login = async (req, res) => {
   }
 };
 
+exports.logout = async (req, res) => {
+  try {
+    res.cookie("Token", null, {
+      expires: new Date(Date.now()),
+      httpOnly: true,
+    });
+    return res.status(200).json({Success: true,message: "Logout successfully."});
+  } catch (error) {
+    return res.status(500).json({Success: false,error: error.message});
+  }
+};
+
 exports.forgetPassword = async(req,res)=>{
   try {
     const email = req.body.email;
@@ -132,12 +146,12 @@ exports.forgetPassword = async(req,res)=>{
         const resetPasswordExpire = Date.now() + 15 * 60 * 1000;
         await User.updateOne({email:email},{$set:{resetPasswordToken:resetToken,resetPasswordExpire:resetPasswordExpire}});
         const resetPasswordUrl = `${req.protocol}://${req.get("host")}/password/reset/${resetToken}`;
-        sendResetPasswordMail(email,resetPasswordUrl);
+        sendResetPasswordMail(email,user,resetPasswordUrl);
         return res.status(200).send({Success:true,message:"Please check your mail, reset password link is send to your mail."});
     }else{
       return res.status(200).send({Success:true, message:"This email does not exists."});
     }
   } catch (error) {
-    return res.status(400).send({Success:flase, error:error.message});
+    return res.status(500).send({Success:flase, error:error.message});
   }
 }
