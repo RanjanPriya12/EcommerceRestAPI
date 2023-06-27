@@ -158,7 +158,7 @@ exports.forgetPassword = async (req, res) => {
       const resetPasswordUrl = `${req.protocol}://${req.get(
         "host"
       )}/password/reset/${resetToken}`;
-      // sendResetPasswordMail(email,user,resetPasswordUrl);
+      sendResetPasswordMail(email,user,resetPasswordUrl);
       return res.status(200).send({
         Success: true,
         message:
@@ -203,6 +203,7 @@ exports.forgetPassword = async (req, res) => {
 //   }
 // };
 
+//get user details
 exports.getUserDetails = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
