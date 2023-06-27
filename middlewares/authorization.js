@@ -1,17 +1,10 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
+const cookie=require("cookie");
 
 exports.isAuthenticate = async (req, res, next) => {
-  const { token } = req.cookies;
+  const  token  = (cookie.parse(req.headers.cookie)).Token;
   if (!token) {
-    return res
-      .status(400)
-      .send({
-        Success: false,
-        message: "Authorization token not found or incorrect.",
-      });
-  }
-  if (!req.headers.authorization.startsWith("Bearer ")) {
     return res
       .status(400)
       .send({
