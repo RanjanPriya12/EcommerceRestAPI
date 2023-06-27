@@ -206,6 +206,11 @@ exports.forgetPassword = async (req, res) => {
 exports.getUserDetails = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
+    if (!user) {
+      return res
+        .status(400)
+        .send({ Success: true, message: "User with this id does not exists." });
+    }
     return res.status(200).send({ Success: true, user });
   } catch (error) {
     return res.status(500).send({ Success: false, error: error.message });
@@ -213,21 +218,31 @@ exports.getUserDetails = async (req, res) => {
 };
 
 //update password
-// exports.updatePassword = catchAsyncError(async (req, res, next) => {
-//   const user = await User.findById(req.user.id).select("+password");
-
-//   const isPasswordMatched = user.comparePassword(req.body.oldPassword);
-
-//   if (!isPasswordMatched) {
-//     return next(new ErrorHandler("Incorrect Password", 401));
-//   }
-//   if (req.body.newPassword !== req.body.confirmPassword) {
-//     return next(new ErrorHandler("password does not match", 400));
-//   }
-//   user.password = req.body.newPassword;
-//   await user.save();
-//   sendToken(user, 200, res);
-// });
+exports.updatePassword = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("+password");
+    if (!user) {
+      return res
+        .status(200)
+        .send({ Success: true, message: "User with this id does not exists." });
+    }
+    const isPasswordMatched = user.comparePassword(req.body.oldPassword);
+    if (!isPasswordMatched) {
+      return res
+        .status(400)
+        .send({ Success: true, message: "Incorrect Password." });
+    }
+    if (req.body.newPassword !== req.body.confirmPassword) {
+      return res
+        .status(400)
+        .send({ Success: true, message: "Confirm Password does not matched." });
+    }
+    user.password = req.body.newPassword;
+    await user.save();
+  } catch (error) {
+    return res.status(500).send({ Success: false, error: error.message });
+  }
+};
 
 //update profile
 // exports.updateProfile = async (req, res) => {
