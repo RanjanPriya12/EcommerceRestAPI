@@ -32,3 +32,11 @@ exports.createProduct = async (req, res) => {
     res.status(400).send({Success:false, error:error.message});
   }
 };
+
+exports.getAllProducts = async(req,res)=>{
+  try {
+    
+  } catch (error) {
+    
+  }
+}

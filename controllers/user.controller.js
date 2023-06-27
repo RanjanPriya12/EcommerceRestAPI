@@ -4,6 +4,7 @@ const nodemailer = require("nodemailer");
 const randomstring = require("randomstring");
 const cloudinary = require("cloudinary");
 require("dotenv").config();
+const cookie = require("cookie");
 
 // generate token
 const generateToken = (user) => {
@@ -48,7 +49,7 @@ const sendResetPasswordMail = async(email,user,url)=>{
 
 exports.register = async (req, res) => {
   try {
-    const { first_name, last_ame, email, password } = req.body;
+    const { first_name, last_name, email, password } = req.body;
     let user = await User.findOne({ email: req.body.emil }).lean().exec();
     if (user) {
       return res
@@ -63,7 +64,7 @@ exports.register = async (req, res) => {
 
       user = await User.create({
         first_name,
-        last_ame,
+        last_name,
         email,
         password,
         // avatar: {
@@ -78,7 +79,8 @@ exports.register = async (req, res) => {
         ),
         httpOnly: true,
       };
-      res.cookie("Token", token, options);
+      res.setHeader("Set-Cookie",cookie.serialize("Token", token));
+      //.cookie("Token", token, options);
       return res.status(201).send({
         Success: true,
         message: "Account created successfully",
@@ -146,7 +148,7 @@ exports.forgetPassword = async(req,res)=>{
         const resetPasswordExpire = Date.now() + 15 * 60 * 1000;
         await User.updateOne({email:email},{$set:{resetPasswordToken:resetToken,resetPasswordExpire:resetPasswordExpire}});
         const resetPasswordUrl = `${req.protocol}://${req.get("host")}/password/reset/${resetToken}`;
-        sendResetPasswordMail(email,user,resetPasswordUrl);
+       // sendResetPasswordMail(email,user,resetPasswordUrl);
         return res.status(200).send({Success:true,message:"Please check your mail, reset password link is send to your mail."});
     }else{
       return res.status(200).send({Success:true, message:"This email does not exists."});
