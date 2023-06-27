@@ -12,40 +12,40 @@ const generateToken = (user) => {
 };
 
 // mail for forget password
-const sendResetPasswordMail = async(email,user,url)=>{
+const sendResetPasswordMail = async (email, user, url) => {
   try {
     const tansporter = nodemailer.createTransport({
-      host:"",
-      port:"",
-      secure:false,
-      requireTLS:true,
+      host: "",
+      port: "",
+      secure: false,
+      requireTLS: true,
       service: process.env.SMPT_SERVICE,
-      auth:{
-        user:process.env.SMT_USER,
-        pass:process.env.SMT_PASSWORD
-      }
+      auth: {
+        user: process.env.SMT_USER,
+        pass: process.env.SMT_PASSWORD,
+      },
     });
 
     const message = `Your password reset link is ${url}, click this link to reset your password. If you not requested this email then please ignore it`;
     const mailOptions = {
-      from:process.env.SMT_USER,
-      to:email,
-      subject:`E-commerce Password Recovery Link`,
-      text:message
-    }
-    tansporter.sendMail(mailOptions,(error,info)=>{
-      if(error){
-        console.log("error",error);
-      }else{
+      from: process.env.SMT_USER,
+      to: email,
+      subject: `E-commerce Password Recovery Link`,
+      text: message,
+    };
+    tansporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log("error", error);
+      } else {
         console.log("Mail has been sent", info.response);
       }
-    })
+    });
   } catch (error) {
-    user.resetPasswordToken=undefined;
-    user.resetPasswordExpire=undefined;
-    return res.status(500).send({Success:false,error:error.message});
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    return res.status(500).send({ Success: false, error: error.message });
   }
-}
+};
 
 exports.register = async (req, res) => {
   try {
@@ -73,14 +73,12 @@ exports.register = async (req, res) => {
         // },
       });
       const token = generateToken(user);
-      const options = {
-        expires: new Date(
-          Date.now() + process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000
-        ),
+      res.setHeader("Set-Cookie", cookie.serialize(token), {
         httpOnly: true,
-      };
-      res.setHeader("Set-Cookie",cookie.serialize("Token", token));
-      //.cookie("Token", token, options);
+        maxAge: new Date(
+          Date.now() + process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000
+        ), //for one day
+      });
       return res.status(201).send({
         Success: true,
         message: "Account created successfully",
@@ -133,27 +131,144 @@ exports.logout = async (req, res) => {
       expires: new Date(Date.now()),
       httpOnly: true,
     });
-    return res.status(200).json({Success: true,message: "Logout successfully."});
+    return res
+      .status(200)
+      .json({ Success: true, message: "Logout successfully." });
   } catch (error) {
-    return res.status(500).json({Success: false,error: error.message});
+    return res.status(500).json({ Success: false, error: error.message });
   }
 };
 
-exports.forgetPassword = async(req,res)=>{
+exports.forgetPassword = async (req, res) => {
   try {
     const email = req.body.email;
-    const user = await User.findOne({email});
-    if(user){
-        const resetToken = randomstring.generate();
-        const resetPasswordExpire = Date.now() + 15 * 60 * 1000;
-        await User.updateOne({email:email},{$set:{resetPasswordToken:resetToken,resetPasswordExpire:resetPasswordExpire}});
-        const resetPasswordUrl = `${req.protocol}://${req.get("host")}/password/reset/${resetToken}`;
-       // sendResetPasswordMail(email,user,resetPasswordUrl);
-        return res.status(200).send({Success:true,message:"Please check your mail, reset password link is send to your mail."});
-    }else{
-      return res.status(200).send({Success:true, message:"This email does not exists."});
+    const user = await User.findOne({ email });
+    if (user) {
+      const resetToken = randomstring.generate();
+      const resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+      await User.updateOne(
+        { email: email },
+        {
+          $set: {
+            resetPasswordToken: resetToken,
+            resetPasswordExpire: resetPasswordExpire,
+          },
+        }
+      );
+      const resetPasswordUrl = `${req.protocol}://${req.get(
+        "host"
+      )}/password/reset/${resetToken}`;
+      // sendResetPasswordMail(email,user,resetPasswordUrl);
+      return res.status(200).send({
+        Success: true,
+        message:
+          "Please check your mail, reset password link is send to your mail.",
+      });
+    } else {
+      return res
+        .status(200)
+        .send({ Success: true, message: "This email does not exists." });
     }
   } catch (error) {
-    return res.status(500).send({Success:flase, error:error.message});
+    return res.status(500).send({ Success: flase, error: error.message });
   }
-}
+};
+
+// exports.resetPassword = async (req, res) => {
+//   try {
+//     //create reset token
+//     const resetToken = randomstring.generate();
+//     const user = await User.findOne({
+//       resetPasswordToken: resetToken,
+//       resetPasswordExpire: { $gt: Date.now() },
+//     });
+//     if (!user) {
+//       return res.status(400).send({
+//         Success: true,
+//         message: "Reset password token is invalid or expired",
+//       });
+//     }
+//     if (req.body.password !== req.body.confirmPassword) {
+//       return res
+//         .status(400)
+//         .send({ Success: true, message: "Required new Password" });
+//     }
+//     user.password = req.body.password;
+//     user.resetPasswordToken = undefined;
+//     user.resetPasswordExpire = undefined;
+//     await user.save();
+//     return res.status(200).send({ Success: true, user });
+//   } catch (error) {
+//     return res.status(500).send({ Success: false, error: error.message });
+//   }
+// };
+
+exports.getUserDetails = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    return res.status(200).send({ Success: true, user });
+  } catch (error) {
+    return res.status(500).send({ Success: false, error: error.message });
+  }
+};
+
+//update password
+// exports.updatePassword = catchAsyncError(async (req, res, next) => {
+//   const user = await User.findById(req.user.id).select("+password");
+
+//   const isPasswordMatched = user.comparePassword(req.body.oldPassword);
+
+//   if (!isPasswordMatched) {
+//     return next(new ErrorHandler("Incorrect Password", 401));
+//   }
+//   if (req.body.newPassword !== req.body.confirmPassword) {
+//     return next(new ErrorHandler("password does not match", 400));
+//   }
+//   user.password = req.body.newPassword;
+//   await user.save();
+//   sendToken(user, 200, res);
+// });
+
+//update profile
+// exports.updateProfile = async (req, res) => {
+//   try {
+//     let user = await User.findById(req.params.id);
+//     if (!user) {
+//       return res
+//         .status(200)
+//         .send({ success: true, message: "User does not exists." });
+//     } else {
+//       const newUserData = {
+//         first_name: req.body.first_name,
+//         last_name: req.body.last_name,
+//         email: req.body.email,
+//       };
+//       user = await User.updateOne(req.params.id, newUserData, {
+//         new: true,
+//         runValidators: true,
+//         useFindAndModify: false,
+//       });
+//       await user.save();
+//       return res
+//         .status(200)
+//         .send({ success: true, message: "User data modified successfully." });
+//     }
+//   } catch (error) {
+//     return res.status(500).send({ success: true, error: error.message });
+//   }
+// };
+
+//delete user
+// exports.deleteUser = catchAsyncError(async (req, res, next) => {
+//   const user = await User.findById(req.params.id);
+//   if (!user) {
+//     return next(
+//       new ErrorHandler(`User does not exist with ID: ${req.params.id}`)
+//     );
+//   }
+//   const imageId = user.avatar.public_id;
+//   await cloudinary.v2.uploader.destroy(imageId);
+//   await user.remove();
+
+//   res.status(200).json({ success: true });
+// });
