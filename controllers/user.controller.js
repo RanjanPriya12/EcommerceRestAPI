@@ -246,33 +246,33 @@ exports.updatePassword = async (req, res) => {
 };
 
 //update profile
-// exports.updateProfile = async (req, res) => {
-//   try {
-//     let user = await User.findById(req.params.id);
-//     if (!user) {
-//       return res
-//         .status(200)
-//         .send({ success: true, message: "User does not exists." });
-//     } else {
-//       const newUserData = {
-//         first_name: req.body.first_name,
-//         last_name: req.body.last_name,
-//         email: req.body.email,
-//       };
-//       user = await User.updateOne(req.params.id, newUserData, {
-//         new: true,
-//         runValidators: true,
-//         useFindAndModify: false,
-//       });
-//       await user.save();
-//       return res
-//         .status(200)
-//         .send({ success: true, message: "User data modified successfully." });
-//     }
-//   } catch (error) {
-//     return res.status(500).send({ success: true, error: error.message });
-//   }
-// };
+exports.updateProfile = async (req, res) => {
+  try {
+    let user = await User.findById(req.params.id);
+    if (!user) {
+      return res
+        .status(200)
+        .send({ success: true, message: "User does not exists." });
+    } else {
+      const newUserData = {
+        first_name: req.body.first_name,
+        last_name: req.body.last_name,
+        email: req.body.email,
+      };
+      user = await User.updateOne(req.params.id, newUserData, {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false,
+      });
+      await user.save();
+      return res
+        .status(200)
+        .send({ success: true, message: "User data modified successfully." });
+    }
+  } catch (error) {
+    return res.status(500).send({ success: true, error: error.message });
+  }
+};
 
 //delete user
 // exports.deleteUser = catchAsyncError(async (req, res, next) => {
