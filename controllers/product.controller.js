@@ -1,6 +1,7 @@
 const Product = require("../models/products.model");
 const cloudinary = require("cloudinary");
 
+//create product
 exports.createProduct = async (req, res) => {
   try {
     let images = [];
@@ -33,10 +34,12 @@ exports.createProduct = async (req, res) => {
   }
 };
 
+//get all products
 exports.getAllProducts = async(req,res)=>{
   try {
-    
+    const products = await Product.find({}).lean().exec();
+    return res.status(200).send({Success:true,message:"Products fetched successfully.", products:products});
   } catch (error) {
-    
+    return res.status(500).send({Success:false, error:error.message});
   }
 }

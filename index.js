@@ -7,6 +7,7 @@ const cors=require('cors');
 const cloudinary = require("cloudinary");
 const bodyParser = require("body-parser");
 const fileUpload = require("express-fileupload");
+const productRoute = require("./routes/product.route");
 app.use(express.json());
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -19,6 +20,8 @@ app.get("/",(req,res)=>{
 });
 
 app.use("/api/myStore",userRoute);
+app.use("/api/myStore/products",productRoute);
+
 cloudinary.config({ 
     cloud_name: process.env.UPLOAD_CLOUD_NAME, 
     api_key: process.env.UPLOAD_API_KEY, 
