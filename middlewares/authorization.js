@@ -22,16 +22,16 @@ exports.isAuthenticate = async (req, res, next) => {
   next();
 };
 
-// exports.isAuthorizeRoles = (...roles) => {
-//   return (req, res, next) => {
-//     if (!roles.includes(req.user.role)) {
-//       return next(
-//         new ErrorHandle(
-//           `Role: ${req.user.role} is not allowed to access this resource`,
-//           403
-//         )
-//       );
-//     }
-//     next();
-//   };
-// };
+exports.isAuthorizeRoles = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new ErrorHandle(
+          `Role: ${req.user.role} is not allowed to access this resource`,
+          403
+        )
+      );
+    }
+    next();
+  };
+};
