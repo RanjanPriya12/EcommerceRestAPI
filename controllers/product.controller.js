@@ -24,12 +24,12 @@ exports.createProduct = async (req, res) => {
     req.body.images = imagesLinks;
     req.body.user = req.user.id;
     const product = await Product.create(req.body);
-    res.status(201).json({
+    return res.status(201).send({
       success: true,
       product: product,
     });
   } catch (error) {
-    res.status(400).send({Success:false, error:error.message});
+    return res.status(400).send({Success:false, error:error.message});
   }
 };
 
