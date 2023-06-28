@@ -18,7 +18,7 @@ exports.isAuthenticate = async (req, res, next) => {
   } catch (error) {
     return res.status(400).send({ Success: false, error: error.message });
   }
-  req.user = await User.findById(decodeData.id);
+  req.user = await User.findById(decodeData.user._id);
   next();
 };
 
