@@ -49,36 +49,20 @@ const sendResetPasswordMail = async (email, user, url) => {
 
 exports.register = async (req, res) => {
   try {
-    const { first_name, last_name, email, password } = req.body;
     let user = await User.findOne({ email: req.body.emil }).lean().exec();
     if (user) {
       return res
         .status(400)
         .send({ Success: false, message: "User already exists" });
     } else {
-      // const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
-      //   folder: "Avtaar",
-      //   width: 150,
-      //   crop: "scale",
-      // });
-
-      user = await User.create({
-        first_name,
-        last_name,
-        email,
-        password,
-        // avatar: {
-        //   public_id: myCloud.public_id,
-        //   url: myCloud.secure_url,
-        // },
-      });
+      user = await User.create(req.body);
       const token = generateToken(user);
-      res.setHeader("Set-Cookie", cookie.serialize(token), {
+      res.setHeader("Set-Cookie", cookie.serialize("Token",token, {
         httpOnly: true,
         maxAge: new Date(
           Date.now() + process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000
         ), //for one day
-      });
+      }));
       return res.status(201).send({
         Success: true,
         message: "Account created successfully",
@@ -107,14 +91,13 @@ exports.login = async (req, res) => {
     if (!match) {
       return res.status(400).send({ message: "Incorrect email or password" });
     } else {
-      let token = generateToken(user);
-      const options = {
-        expires: new Date(
-          Date.now() + process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000
-        ),
+      const token = generateToken(user);
+      res.setHeader("Set-Cookie", cookie.serialize("Token",token, {
         httpOnly: true,
-      };
-      res.cookie("Token", token, options);
+        maxAge: new Date(
+          Date.now() + process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000
+        ), //for one day
+      }));
       return res.status(200).send({
         Success: true,
         message: "User login successfully",
@@ -221,13 +204,13 @@ exports.getUserDetails = async (req, res) => {
 //update password
 exports.updatePassword = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("+password");
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res
         .status(200)
         .send({ Success: true, message: "User with this id does not exists." });
     }
-    const isPasswordMatched = user.comparePassword(req.body.oldPassword);
+    const isPasswordMatched =await user.comparePassword(req.body.password);
     if (!isPasswordMatched) {
       return res
         .status(400)
@@ -240,6 +223,9 @@ exports.updatePassword = async (req, res) => {
     }
     user.password = req.body.newPassword;
     await user.save();
+    return res
+        .status(400)
+        .send({ Success: true, message: "Your password is updated successfully." });
   } catch (error) {
     return res.status(500).send({ Success: false, error: error.message });
   }
