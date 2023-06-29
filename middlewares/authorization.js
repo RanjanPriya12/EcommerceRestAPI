@@ -24,13 +24,12 @@ exports.isAuthenticate = async (req, res, next) => {
 
 exports.isAuthorizeRoles = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return next(
-        new ErrorHandle(
-          `Role: ${req.user.role} is not allowed to access this resource`,
-          403
-        )
-      );
+    try {
+      if (!roles.includes(req.user.role)) {
+        return next(res.status(403).send({Success:false,message:`Role: ${req.user.role} is not allowed to access this resource`}));
+      }
+    } catch (error) {
+      return next(res.status(500).send({Success:false,error:error.message}));
     }
     next();
   };
