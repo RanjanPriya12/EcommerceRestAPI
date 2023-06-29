@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
 
 const cartSchema = new mongoose.Schema({
-    user:{
+    userId:{
         type:mongoose.Schema.ObjectId,
         ref:"user",
         required:true
     },
-    product:{
+    productId:{
         type:mongoose.Schema.ObjectId,
         ref:"product",
         required:true
