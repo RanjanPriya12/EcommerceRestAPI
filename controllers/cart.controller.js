@@ -21,3 +21,26 @@ exports.getCartItems = async(req,res)=>{
     }
 }
 
+//update cart item [size,qty]
+exports.updateCartItem = async(req,res)=>{
+    try {
+        const id = req.params.id;
+        let cartItem = await Cart.findOne({_id:id});
+        if(!cartItem){
+            return res.status(400).send({Success:false, message:"Cart item does not exists."});
+        }else{
+            let size = req.body.size,qty=req.body.qty;
+            if(size && qty){
+                cartItem = await Cart.updateOne({_id:req.params.id},{$set:{size:size,qty:qty}});
+            }else if(size!=="" && qty===""){
+                cartItem = await Cart.updateOne({_id:req.params.id},{$set:{size:size}});
+            }else if(size==="" && qty !==""){
+                cartItem = await Cart.updateOne({_id:req.params.id},{$set:{qty:qty}});
+            }
+            return res.status(200).send({Success:true, message:"Cart item updated successfully.",cartItem:cartItem});
+        }
+    } catch (error) {
+        return res.status(500).send({Success:false, error:error.message});
+    }
+}
+
