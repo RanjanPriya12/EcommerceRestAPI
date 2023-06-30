@@ -2,7 +2,7 @@ const Product = require("../models/products.model");
 const cloudinary = require("cloudinary");
 const ApiFeatures = require("../utils/API_Feature");
 
-//create product
+//create product by admin
 exports.createProduct = async (req, res) => {
   try {
     let images = [];
@@ -68,13 +68,11 @@ exports.getAllProducts = async (req, res) => {
 exports.getProductsByAdmin = async (req, res) => {
   try {
     const products = await Product.find().lean().exec();
-    return res
-      .status(200)
-      .send({
-        Success: true,
-        message: "Products fetched successfully.",
-        products: products,
-      });
+    return res.status(200).send({
+      Success: true,
+      message: "Products fetched successfully.",
+      products: products,
+    });
   } catch (error) {
     return res.status(500).send({ Success: false, error: error.message });
   }
@@ -82,47 +80,81 @@ exports.getProductsByAdmin = async (req, res) => {
 
 //update product by admin
 exports.updateProduct = async (req, res) => {
-  let product = await Product.findById(req.params.id);
-  if (!product) {
-    return res
-      .status(404)
-      .send({
+  try {
+    let product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).send({
         Success: false,
-        message: "Something went wrong, product not found.",
+        message: "Product not found.",
       });
-  }
-  // images cloudinary
-  let images = [];
-  if (typeof req.body.images === "string") {
-    images.push(req.body.images);
-  } else {
-    images = req.body.images;
-  }
-  if (images !== undefined) {
-    for (let i = 0; i < product.images.length; i++) {
-      await cloudinary.v2.uploader.destroy(product.images[i].public_id);
+    } else {
+      // images cloudinary
+      let images = [];
+      if (typeof req.body.images === "string") {
+        images.push(req.body.images);
+      } else {
+        images = req.body.images;
+        if (images !== undefined) {
+          for (let i = 0; i < product.images.length; i++) {
+            await cloudinary.v2.uploader.destroy(product.images[i].public_id);
+          }
+          const imagesLinks = [];
+
+          for (let i = 0; i < images.length; i++) {
+            const result = await cloudinary.v2.uploader.upload(images[i], {
+              folder: "products",
+            });
+
+            imagesLinks.push({
+              public_id: result.public_id,
+              url: result.secure_url,
+            });
+          }
+          req.body.images = imagesLinks;
+        }
+
+        product = await Product.updateOne(req.params.id, req.body, {
+          new: true,
+          runValidators: true,
+          useFindAndModify: false,
+        });
+        return res
+          .status(200)
+          .send({
+            Success: true,
+            product,
+            message: "Product updated successfully.",
+          });
+      }
     }
-    const imagesLinks = [];
+  } catch (error) {
+    return res.status(500).send({ Success: false, error: error.message });
+  }
+};
 
-    for (let i = 0; i < images.length; i++) {
-      const result = await cloudinary.v2.uploader.upload(images[i], {
-        folder: "products",
-      });
-
-      imagesLinks.push({
-        public_id: result.public_id,
-        url: result.secure_url,
+//Delete product by admin
+exports.deleteProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res
+        .status(404)
+        .send({ Success: false, message: "Product not found" });
+    } else {
+      //delete cloudinary image
+      for (let i = 0; i < product.images.length; i++) {
+        await cloudinary.v2.uploader.destroy(product.images[i].public_id);
+      }
+      await product.remove();
+      return res.status(200).send({
+        Success: true,
+        message: "Product delete successfully",
       });
     }
-    req.body.images = imagesLinks;
+  } catch (error) {
+    return res.status(500).json({
+      Success: false,
+      error: error.message,
+    });
   }
-
-  product = await Product.updateOne(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-    useFindAndModify: false,
-  });
-  return res
-    .status(200)
-    .send({ success: true, product, message: "Product updated successfully." });
 };
