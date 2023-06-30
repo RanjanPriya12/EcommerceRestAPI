@@ -42,10 +42,10 @@ exports.getAllProducts = async (req, res) => {
     const apiFeature = new ApiFeatures(Product.find(), req.query)
       .search()
       .rangeFilter()
-      // .categoryFilter()
-      // .subCategoryFilter()
-      // .colorFilter()
-      // .brandFilter()
+      .categoryFilter()
+      .subCategoryFilter()
+      .colorFilter()
+      .brandFilter()
       .sorting()
       .pagination(resultPerPage);
     const products = await apiFeature.query;
