@@ -41,7 +41,7 @@ exports.getAllProducts = async (req, res) => {
     const resultPerPage = 16;
     const apiFeature = new ApiFeatures(Product.find(), req.query)
       .search()
-      // .rangeFilter()
+      .rangeFilter()
       // .categoryFilter()
       // .subCategoryFilter()
       // .colorFilter()
