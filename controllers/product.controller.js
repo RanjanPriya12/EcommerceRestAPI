@@ -46,7 +46,7 @@ exports.getAllProducts = async (req, res) => {
       // .subCategoryFilter()
       // .colorFilter()
       // .brandFilter()
-      // .sorting()
+      .sorting()
       .pagination(resultPerPage);
     const products = await apiFeature.query;
     const productCount = products.length;
