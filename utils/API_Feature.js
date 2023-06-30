@@ -45,7 +45,7 @@ class ApiFeatures {
       
     }
 
-    SubCategoryFilter(){
+    subCategoryFilter(){
       const subCat = this.queryStr.subCategory;
       console.log(subCat);
       if(cat)

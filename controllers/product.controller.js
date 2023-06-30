@@ -1,5 +1,6 @@
 const Product = require("../models/products.model");
 const cloudinary = require("cloudinary");
+const ApiFeatures = require("../utils/API_Feature");
 
 //create product
 exports.createProduct = async (req, res) => {
@@ -30,16 +31,37 @@ exports.createProduct = async (req, res) => {
       product: product,
     });
   } catch (error) {
-    return res.status(400).send({Success:false, error:error.message});
+    return res.status(400).send({ Success: false, error: error.message });
   }
 };
 
 //get all products
-exports.getAllProducts = async(req,res)=>{
+exports.getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find({}).lean().exec();
-    return res.status(200).send({Success:true,message:"Products fetched successfully.", products:products});
+    const resultPerPage = 16;
+    const apiFeature = new ApiFeatures(Product.find(), req.query)
+      .search()
+      .rangeFilter()
+      .categoryFilter()
+      .subCategoryFilter()
+      .colorFilter()
+      .brandFilter()
+      .sorting()
+      .pagination(resultPerPage);
+    const products = await apiFeature.query;
+    const productCount = products.length;
+    const totalPages = Math.ceil(productCount / resultPerPage);
+    return res
+      .status(200)
+      .send({
+        Success: true,
+        message: "Products fetched successfully.",
+        products,
+        productCount,
+        resultPerPage,
+        totalPages,
+      });
   } catch (error) {
-    return res.status(500).send({Success:false, error:error.message});
+    return res.status(500).send({ Success: false, error: error.message });
   }
-}
+};
