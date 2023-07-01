@@ -44,3 +44,18 @@ exports.updateCartItem = async(req,res)=>{
     }
 }
 
+//delete item from cart
+exports.delteCartItem = async(req,res)=>{
+    try {
+        const item = await Cart.findOne({_id:req.params.id});
+        if(!item){
+            return res.status(404).send({Success:false,message:"Cart item is not found."});
+        }else{
+           await item.remove();
+           return res.status(200).send({Success:true,message:"Cart item deleted successfully."});
+        }
+    } catch (error) {
+        return res.status(500).ssend({Success:false,error:error.message});
+    }
+}
+
