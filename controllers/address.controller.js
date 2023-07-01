@@ -9,3 +9,11 @@ const userAddress = async(req,res)=>{
         return res.status(500).send({Success:false,error:error.message});
     }
 }
+
+const updateAddress = async(req,res)=>{
+    try {
+        const address = await Address.findOne(req.params.id);
+    } catch (error) {
+        
+    }
+}
