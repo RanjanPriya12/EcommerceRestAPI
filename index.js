@@ -10,6 +10,7 @@ const fileUpload = require("express-fileupload");
 const productRoute = require("./routes/product.route");
 const cartRoute = require("./routes/cart.route");
 const orderRoute = require("./routes/order.route");
+const shippingRoute = require("./routes/shippingDetails.route");
 app.use(express.json());
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -25,6 +26,7 @@ app.use("/api/myStore",userRoute);
 app.use("/api/myStore/products",productRoute);
 app.use("/api/myStore/cart",cartRoute);
 app.use("/api/myStore/order",orderRoute);
+app.use("/api/myStore/shipping",shippingRoute);
 
 cloudinary.config({ 
     cloud_name: process.env.UPLOAD_CLOUD_NAME, 
