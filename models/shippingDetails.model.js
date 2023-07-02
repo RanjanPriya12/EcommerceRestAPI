@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 
-const addressShcema = new mongoose.Schema({
-    orderId:{type:mongoose.Schema.ObjectId,required:true},
+const shippingShcema = new mongoose.Schema({
     username: { type: String, required: true },
     email: { type: String, required: false },
     mobile: { type: Number, required: true },
@@ -17,6 +16,6 @@ const addressShcema = new mongoose.Schema({
     timestamps:true
 });
 
-const ShippingDetails = new mongoose.model('address',addressShcema);
+const ShippingDetails = new mongoose.model('shipping',shippingShcema);
 
 module.exports = ShippingDetails;
