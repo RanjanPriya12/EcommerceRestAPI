@@ -1,6 +1,5 @@
 const ShippingDetails = require("../models/address.model");
 
-//create customer shipping info
 exports.shippingInfo = async(req,res)=>{
     try {
         const address = await ShippingDetails.insert(req.body);
