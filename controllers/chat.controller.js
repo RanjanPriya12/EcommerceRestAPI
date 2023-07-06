@@ -1,4 +1,5 @@
 const Chat = require("../models/chat.model");
+const User = require("../models/user.model");
 
 
 exports.accessChat = async(req,res)=>{
@@ -45,4 +46,49 @@ exports.accessChat = async(req,res)=>{
     } catch (error) {
         return res.status(500).send({Success:false,error:error.message});
     }
+}
+
+exports.fetchCHats = async(req,res)=>{
+    try {
+        let chats = await Chat.find({users:{$elemMatch:{$eq:req.user._id}}}).populate("users","-password")
+        .populate("groupAdmin","-password").populate("latestMessage").sort({updatedAt:-1});
+
+        chats = await User.populate(chats,{
+            path:"latestMessage.sender",
+            select :"first_name, last_name, email,avatar"
+        });
+
+        return res.status(200).send({Success:true,chats:chats});
+    } catch (error) {
+        return res.status(500).send({Success:false,error:error.message});
+    }
+}
+
+exports.createGroupChat = async(req,res)=>{
+    if(!req.body.users || !req.body.chatName){
+        return res.status(200).send({message:"Please fill all the fields."});
+    }
+
+    let users = JSON.parse(req.body.users);
+    if(users.length<2){
+        return res.status(400).send({message:"More than two friends are required to form a group chat."})
+    }
+    users.push(req.user);
+    try {
+        const groupChat = await Chat.create({
+            chatName:req.body.chatName,
+            isGroupChat:true,
+            users:users,
+            groupAdmin:req.user
+        });
+
+        const fullGroupChat = await Chat.find({_id:groupChat._id}).populate("users","-password").populate("groupAdmin","-password");
+        return res.status(200).send({Success:true,groupChat:fullGroupChat});
+    } catch (error) {
+        return res.status(500).send({Success:false,error:error.message});
+    }
+}
+
+exports.renameGroup = async(req,res)=>{
+    
 }
