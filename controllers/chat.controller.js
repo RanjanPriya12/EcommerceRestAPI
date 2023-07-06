@@ -90,5 +90,51 @@ exports.createGroupChat = async(req,res)=>{
 }
 
 exports.renameGroup = async(req,res)=>{
-    
+    try {
+        const { chatId, chatName } = req.body;
+        const updatedChatName = await Chat.findByIdAndUpdate(chatId,{chatName},{new:true})
+        .populate("users","-password").populate("groupAdmin","-password");
+        if(!updatedChatName){
+            return res.status(404).send({Success:false,message:"Chat not found."});
+        }else{
+            return res.status(200).send({Success:true,chat:updatedChatName});
+        }
+    } catch (error) {
+        return res.status(500).send({Success:false,error:error.message});
+    }
+}
+
+exports.addToGroup = async(req,res)=>{
+    try {
+        const { userId, chatId } = req.body;
+        const added = await Chat.findByIdAndUpdate(chatId,{
+            $push:{users:userId}
+        },{new:true}).populate("users","-password").populate("groupAdmin","-password");
+
+        if(!added){
+            return res.status(404).send({Success:false,message:"Chat not found."});
+        }else{
+            return res.status(200).send({Success:true,groupChat:added});
+        }
+    } catch (error) {
+        return res.status(500).send({Success:false,error:error.message});
+    }
+}
+
+
+exports.removeFromGroup = async(req,res)=>{
+    try {
+        const { userId, chatId } = req.body;
+        const removed = await Chat.findByIdAndUpdate(chatId,{
+            $pull:{users:userId}
+        },{new:true}).populate("users","-password").populate("groupAdmin","-password");
+
+        if(!removed){
+            return res.status(404).send({Success:false,message:"Chat not found."});
+        }else{
+            return res.status(200).send({Success:true,groupChat:removed});
+        }
+    } catch (error) {
+        return res.status(500).send({Success:false,error:error.message});
+    }
 }
